@@ -14,7 +14,9 @@ API Manager is a Swift package designed to simplify network requests in Swift ap
 ### Swift Package Manager
 
 To integrate API Manager into your project using Swift Package Manager, add the following as a dependency to your `Package.swift`:
+```
 dependencies: [ .package(url: "https://github.com/betulcalik/APIManager.git", from: "1.0.0") ]
+```
 
 Alternatively, you can navigate to your Xcode project, select Swift Packages, and click the "+" icon to search for `APIManager`.
 
