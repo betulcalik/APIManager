@@ -8,7 +8,12 @@
 import Foundation
 import Combine
 
-public class APIManager {
+public protocol APIManagerProtocol {
+    func get<T: Decodable>(path: String) -> AnyPublisher<T, Error>
+    func post<T: Encodable, R: Decodable>(path: String, body: T) -> AnyPublisher<R, Error>
+}
+
+public class APIManager: APIManagerProtocol {
     
     private var _baseURL: String
     private var token = ""
