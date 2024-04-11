@@ -11,6 +11,9 @@ import Combine
 public protocol APIManagerProtocol {
     func get<T: Decodable>(path: String) -> AnyPublisher<T, Error>
     func post<T: Encodable, R: Decodable>(path: String, body: T) -> AnyPublisher<R, Error>
+    
+    func setToken(_ token: String)
+    func getToken() -> String
 }
 
 public class APIManager: APIManagerProtocol {
