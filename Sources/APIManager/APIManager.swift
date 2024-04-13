@@ -10,7 +10,7 @@ import Combine
 
 public protocol APIManagerProtocol {
     func get<T: Decodable>(path: String) -> AnyPublisher<T, Error>
-    func post<T: Encodable, R: Decodable>(path: String, body: T) -> AnyPublisher<R, Error>
+    func post<T: Encodable, R: Decodable>(path: String, body: T?) -> AnyPublisher<R, Error>
     
     func setToken(_ token: String)
     func getToken() -> String
@@ -81,7 +81,7 @@ public class APIManager: APIManagerProtocol {
             .eraseToAnyPublisher()
     }
     
-    public func post<T: Encodable, R: Decodable>(path: String, body: T) -> AnyPublisher<R, Error> {
+    public func post<T: Encodable, R: Decodable>(path: String, body: T? = nil) -> AnyPublisher<R, Error> {
         guard let url = URL(string: _baseURL + path) else {
             return Fail(error: CustomError.networkError(type: .invalidURL)).eraseToAnyPublisher()
         }
@@ -101,10 +101,12 @@ public class APIManager: APIManagerProtocol {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .formatted(DateFormatter.backendFormat)
         
-        do {
-            request.httpBody = try encoder.encode(body)
-        } catch {
-            return Fail(error: CustomError.networkError(type: .invalidResponse)).eraseToAnyPublisher()
+        if let body = body {
+            do {
+                request.httpBody = try encoder.encode(body)
+            } catch {
+                return Fail(error: CustomError.networkError(type: .invalidResponse)).eraseToAnyPublisher()
+            }
         }
         
         return session.dataTaskPublisher(for: request)
