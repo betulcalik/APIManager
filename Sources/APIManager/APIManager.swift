@@ -10,6 +10,7 @@ import Combine
 
 public protocol APIManagerProtocol {
     func get<T: Decodable>(path: String) -> AnyPublisher<T, Error>
+    func getImage(path: String) -> AnyPublisher<Data, Error>
     func post<R: Decodable>(path: String) -> AnyPublisher<R, Error>
     func post<T: Encodable, R: Decodable>(path: String, body: T) -> AnyPublisher<R, Error>
     
@@ -81,6 +82,43 @@ public class APIManager: APIManagerProtocol {
             .decode(type: T.self, decoder: decoder)
             .eraseToAnyPublisher()
     }
+    
+    public func getImage(path: String) -> AnyPublisher<Data, Error> {
+            guard let url = URL(string: _baseURL + path) else {
+                return Fail(error: CustomError.networkError(type: .invalidURL)).eraseToAnyPublisher()
+            }
+            let session = URLSession(configuration: URLSessionConfiguration.default)
+            
+            var request = URLRequest(url: url)
+            request.httpMethod = HTTPMethod.get.rawValue
+            request.setValue(HTTPHeader.json.rawValue,
+                             forHTTPHeaderField: HTTPHeaderField.contentType.rawValue)
+            
+            if !token.isEmpty {
+                request.setValue("Bearer \(token)",
+                                 forHTTPHeaderField: HTTPHeaderField.authorization.rawValue)
+            }
+            
+            return session.dataTaskPublisher(for: request)
+                .tryMap { (data, response) in
+                    guard let httpResponse = response as? HTTPURLResponse else {
+                        throw CustomError.networkError(type: .invalidResponse)
+                    }
+                    
+                    let statusCode = httpResponse.statusCode
+                    let httpStatus = HTTPResponse(statusCode: statusCode)
+                    
+                    guard httpResponse.statusCode == 200 else {
+                        throw CustomError.networkError(type: .invalidStatusCode(httpResponse.statusCode, httpStatus))
+                    }
+                    
+                    return data
+                }
+                .mapError { error -> Error in
+                    return error
+                }
+                .eraseToAnyPublisher()
+        }
     
     public func post<R>(path: String) -> AnyPublisher<R, Error> where R : Decodable {
         guard let url = URL(string: _baseURL + path) else {
