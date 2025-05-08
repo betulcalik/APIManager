@@ -12,6 +12,7 @@ public protocol APIManagerProtocol {
     func get<T: Decodable>(path: String) -> AnyPublisher<T, Error>
     func post<R: Decodable>(path: String) -> AnyPublisher<R, Error>
     func post<T: Encodable, R: Decodable>(path: String, body: T) -> AnyPublisher<R, Error>
+    func upload(path: String, fileData: Data, fileName: String, mimeType: String, parameterName: String) -> AnyPublisher<Data, Error>
     
     func setToken(_ token: String)
     func getToken() -> String
@@ -170,4 +171,54 @@ public class APIManager: APIManagerProtocol {
             .decode(type: R.self, decoder: decoder)
             .eraseToAnyPublisher()
     }
+    
+    public func upload(path: String, fileData: Data, fileName: String, mimeType: String, parameterName: String = "file") -> AnyPublisher<Data, Error> {
+        guard let url = URL(string: _baseURL + path) else {
+            return Fail(error: CustomError.networkError(type: .invalidURL)).eraseToAnyPublisher()
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = HTTPMethod.post.rawValue
+
+        let boundary = UUID().uuidString
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        if !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: HTTPHeaderField.authorization.rawValue)
+        }
+
+        var body = Data()
+
+        // File data
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"\(parameterName)\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+        body.append(fileData)
+        body.append("\r\n".data(using: .utf8)!)
+
+        // End boundary
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
+        request.httpBody = body
+
+        let session = URLSession(configuration: .default)
+
+        return session.dataTaskPublisher(for: request)
+            .tryMap { (data, response) in
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    throw CustomError.networkError(type: .invalidResponse)
+                }
+                
+                guard httpResponse.statusCode == 200 else {
+                    throw CustomError.networkError(type: .invalidStatusCode(httpResponse.statusCode, HTTPResponse(statusCode: httpResponse.statusCode)))
+                }
+                
+                return data
+            }
+            .mapError { error in
+                return error
+            }
+            .eraseToAnyPublisher()
+    }
+
 }
