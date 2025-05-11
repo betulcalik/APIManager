@@ -147,7 +147,8 @@ public class APIManager: APIManagerProtocol {
         decoder.dateDecodingStrategy = .formatted(DateFormatter.backendFormat)
         
         do {
-            request.httpBody = try encoder.encode(body)
+            let jsonData = try encoder.encode(body)
+            request.httpBody = jsonData
             
             if let jsonString = String(data: jsonData, encoding: .utf8) {
                 print("🚀 JSON Body Sent: \(jsonString)")
