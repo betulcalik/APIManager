@@ -70,7 +70,7 @@ public class APIManager: APIManagerProtocol {
                 let statusCode = httpResponse.statusCode
                 let httpStatus = HTTPResponse(statusCode: statusCode)
                 
-                guard httpResponse.statusCode == 200 else {
+                guard (200...299).contains(statusCode) else {
                     throw CustomError.networkError(type: .invalidStatusCode(httpResponse.statusCode, httpStatus))
                 }
                 
@@ -111,7 +111,7 @@ public class APIManager: APIManagerProtocol {
                 let statusCode = httpResponse.statusCode
                 let httpStatus = HTTPResponse(statusCode: statusCode)
                 
-                guard httpResponse.statusCode == 200 else {
+                guard (200...299).contains(statusCode) else {
                     throw CustomError.networkError(type: .invalidStatusCode(httpResponse.statusCode, httpStatus))
                 }
                 
@@ -166,7 +166,7 @@ public class APIManager: APIManagerProtocol {
                 let statusCode = httpResponse.statusCode
                 let httpStatus = HTTPResponse(statusCode: statusCode)
                 
-                guard httpResponse.statusCode == 200 else {
+                guard (200...299).contains(statusCode) else {
                     throw CustomError.networkError(type: .invalidStatusCode(httpResponse.statusCode, httpStatus))
                 }
                 
@@ -216,7 +216,10 @@ public class APIManager: APIManagerProtocol {
                     throw CustomError.networkError(type: .invalidResponse)
                 }
                 
-                guard httpResponse.statusCode == 200 else {
+                let statusCode = httpResponse.statusCode
+                let httpStatus = HTTPResponse(statusCode: statusCode)
+                
+                guard (200...299).contains(statusCode) else {
                     throw CustomError.networkError(type: .invalidStatusCode(httpResponse.statusCode, HTTPResponse(statusCode: httpResponse.statusCode)))
                 }
                 
