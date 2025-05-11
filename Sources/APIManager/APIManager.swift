@@ -141,6 +141,8 @@ public class APIManager: APIManagerProtocol {
         }
         
         let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .formatted(DateFormatter.backendFormat)
+        
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .formatted(DateFormatter.backendFormat)
         
