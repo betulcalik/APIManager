@@ -148,6 +148,10 @@ public class APIManager: APIManagerProtocol {
         
         do {
             request.httpBody = try encoder.encode(body)
+            
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                print("🚀 JSON Body Sent: \(jsonString)")
+            }
         } catch {
             return Fail(error: CustomError.networkError(type: .invalidResponse)).eraseToAnyPublisher()
         }
